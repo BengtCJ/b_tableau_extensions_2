@@ -328,7 +328,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.16';
+  const VERSION = '2026-05-21.17';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -2459,7 +2459,7 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var mT = 12, mR = 72, mB = 8, mL = Math.max(80, Math.min(Math.floor(W * 0.20), 130));
+    var mT = 12, mR = 72, mB = 22, mL = Math.max(80, Math.min(Math.floor(W * 0.20), 130));
     var iW = W - mL - mR, iH = H - mT - mB;
 
     var sorted = [
