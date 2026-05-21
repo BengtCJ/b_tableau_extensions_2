@@ -343,7 +343,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.23';
+  const VERSION = '2026-05-21.24';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -751,7 +751,7 @@
     var titleEl = document.getElementById('chart-title');
     if (titleEl) {
       var label = METRIC_LABELS[CONFIG.metricId] || CONFIG.metricId || '';
-      var unit  = METRIC_UNITS[CONFIG.metricId];
+      var unit  = CONFIG.showUnits !== 'false' ? METRIC_UNITS[CONFIG.metricId] : null;
       titleEl.innerHTML = label +
         (unit ? ' <span style="font-size:18px;color:#808080;">(' + unit + ')</span>' : '');
     }
@@ -846,6 +846,7 @@
     selectedColor:      '#e994a2',
     neutralColor:       '#7d7d7d',
     bgColor:            'transparent',
+    showUnits:          'true',
   };
 
   // ─── STATE ────────────────────────────────────────────────────────────────
@@ -1103,6 +1104,12 @@
                 <input id="s-indicatorParameter" type="text" value="' + CONFIG.indicatorParameter + '">\
               </div>\
               <div class="hint" style="grid-column:1/-1">Year + Month fields used to build yearmonth period keys (e.g. 2025-09). Category field filters out non-brand rows.</div>\
+              <div class="field" style="grid-column:1/-1">\
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">\
+                  <input type="checkbox" id="s-showUnits" ' + (CONFIG.showUnits !== \'false\' ? \'checked\' : \'\') + '>\
+                  Show units in indicator title\
+                </label>\
+              </div>\
             </div>\
           </details>\
 \
@@ -1186,6 +1193,7 @@
       CONFIG.bgColor            = document.getElementById('s-transparent').checked
                                   ? 'transparent'
                                   : document.getElementById('s-bgColor').value;
+      CONFIG.showUnits          = document.getElementById('s-showUnits').checked ? 'true' : 'false';
 
       // Save per-indicator chart override
       if (CONFIG.metricId) _chartOverrides[CONFIG.metricId] = CONFIG.chart;
