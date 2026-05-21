@@ -328,7 +328,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.15';
+  const VERSION = '2026-05-21.16';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -647,7 +647,9 @@
     ['all'].concat(periods).forEach(function(p) {
       var isActive = _selectedPeriod === p;
       var btn = document.createElement('button');
-      btn.textContent = p === 'all' ? 'All' : p;
+      var agg = INDICATOR_AGGREGATION[CONFIG.metricId] || 'avg';
+      var allLabel = agg === 'sum' ? 'Total' : (agg === 'avg' ? 'Average' : 'All');
+      btn.textContent = p === 'all' ? allLabel : p;
       btn.className = 'period-btn' + (isActive ? ' active' : '');
       btn.onclick = function() {
         _selectedPeriod = p;
