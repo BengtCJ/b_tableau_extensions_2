@@ -343,7 +343,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.18';
+  const VERSION = '2026-05-21.19';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -1770,29 +1770,38 @@
       ...data.filter(function(d) { return d.name !== primary; }).sort(function(a,b) { return b.value - a.value; }),
     ];
 
-    el.style.display = 'flex';
-    el.style.alignItems = 'flex-end';
-    el.style.flexWrap = 'wrap';
-    el.style.padding = '16px 20px';
+    var primaryFontSize = Math.min(Math.max(Math.floor(H * 0.42), 36), 96);
+    var compFontSize    = Math.min(Math.max(Math.floor(H * 0.22), 20), 56);
+    var labelFontSize   = Math.max(Math.floor(H * 0.045), 9);
+    var pad             = Math.max(14, Math.floor(Math.min(W, H) * 0.05));
+
+    el.style.display        = 'flex';
+    el.style.alignItems     = 'center';
+    el.style.flexWrap       = 'wrap';
+    el.style.padding        = pad + 'px ' + Math.max(16, pad) + 'px';
+    el.style.gap            = Math.max(14, Math.floor(W * 0.025)) + 'px';
+    el.style.height         = '100%';
+    el.style.boxSizing      = 'border-box';
 
     sorted.forEach(function(d, i) {
       var isPrimary = d.name === primary;
       var wrap = document.createElement('div');
-      wrap.style.cssText = isPrimary
-        ? 'padding-right:24px;margin-right:24px;border-right:1px solid var(--grey-700);'
-        : 'padding-right:20px;';
+      if (isPrimary && sorted.length > 1) {
+        var sepPad = Math.max(14, Math.floor(W * 0.025));
+        wrap.style.cssText = 'padding-right:' + sepPad + 'px;margin-right:' + sepPad + 'px;border-right:1px solid var(--grey-700);';
+      }
 
       var lbl = document.createElement('div');
-      lbl.style.cssText = 'font-family:' + FONT_LIGHT + ';font-size:' + (isPrimary ? '7.5' : '7') + 'px;' +
-        'text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px;' +
+      lbl.style.cssText = 'font-family:' + FONT_LIGHT + ';font-size:' + labelFontSize + 'px;' +
+        'text-transform:uppercase;letter-spacing:0.10em;margin-bottom:4px;' +
         'color:' + (isPrimary ? D.primaryValue.color : D.compValue.color) + ';';
       lbl.textContent = d.name;
 
       var val = document.createElement('div');
       val.setAttribute('data-brand', d.name);
       val.style.cssText = 'font-family:' + D.primaryValue.font + ';font-style:italic;' +
-        'font-size:' + (isPrimary ? D.primaryValue.size : D.compValue.size) + 'px;' +
-        'color:' + (isPrimary ? D.primaryValue.color : D.compValue.color) + ';line-height:0.92;';
+        'font-size:' + (isPrimary ? primaryFontSize : compFontSize) + 'px;' +
+        'color:' + (isPrimary ? D.primaryValue.color : D.compValue.color) + ';line-height:0.90;';
       val.textContent = d.value.toFixed(2);
 
       wrap.appendChild(lbl);
@@ -2290,7 +2299,7 @@
         var cx = leftW + col * cellW + cellW / 2;
         var cy = row * cellH + cellH / 2;
         var ratio = primaryVal > 0 ? Math.sqrt(Math.abs(comp.value) / primaryVal) : 0.5;
-        var r = Math.min(maxR, Math.max(8, maxR * ratio));
+        var r = Math.min(maxR, Math.max(6, pR * ratio));
 
         var cg = svg.append('g').attr('transform', 'translate(' + cx + ',' + cy + ')');
         cg.append('circle').attr('r', 0)
