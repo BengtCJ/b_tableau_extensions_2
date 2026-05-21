@@ -293,7 +293,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.6';
+  const VERSION = '2026-05-21.7';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -1092,8 +1092,10 @@
       var rows = dataTable.data;
 
       function colIdx(name) {
-        var lower = name.toLowerCase();
-        return cols.findIndex(function(c) { return c.fieldName.toLowerCase() === lower; });
+        var norm = name.toLowerCase().replace(/[\s_]+/g, '');
+        return cols.findIndex(function(c) {
+          return c.fieldName.toLowerCase().replace(/[\s_]+/g, '') === norm;
+        });
       }
       var brandIdx    = colIdx(CONFIG.brandField);
       var valueIdx    = colIdx(CONFIG.valueField);
