@@ -293,7 +293,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.5';
+  const VERSION = '2026-05-21.6';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -1091,12 +1091,16 @@
       var cols = dataTable.columns;
       var rows = dataTable.data;
 
-      var brandIdx    = cols.findIndex(function(c) { return c.fieldName === CONFIG.brandField; });
-      var valueIdx    = cols.findIndex(function(c) { return c.fieldName === CONFIG.valueField; });
-      var yearIdx     = cols.findIndex(function(c) { return c.fieldName === CONFIG.yearField; });
-      var monthIdx    = cols.findIndex(function(c) { return c.fieldName === CONFIG.monthField; });
-      var categoryIdx = cols.findIndex(function(c) { return c.fieldName === CONFIG.categoryField; });
-      var indicatorIdx= cols.findIndex(function(c) { return c.fieldName === 'indicator_id'; });
+      function colIdx(name) {
+        var lower = name.toLowerCase();
+        return cols.findIndex(function(c) { return c.fieldName.toLowerCase() === lower; });
+      }
+      var brandIdx    = colIdx(CONFIG.brandField);
+      var valueIdx    = colIdx(CONFIG.valueField);
+      var yearIdx     = colIdx(CONFIG.yearField);
+      var monthIdx    = colIdx(CONFIG.monthField);
+      var categoryIdx = colIdx(CONFIG.categoryField);
+      var indicatorIdx= colIdx('indicator_id');
 
       if (brandIdx === -1 || valueIdx === -1) {
         var available = cols.map(function(c) { return c.fieldName; }).join(', ');
