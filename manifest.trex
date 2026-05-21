@@ -10,6 +10,9 @@
       <url>https://bengtcj.github.io/b_tableau_extensions_2/index.html</url>
     </source-location>
     <icon>iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAF0lEQVQ4y2NgYGBg+E8GPgwMBBIHAAAkAAQAkJbGpQAAAABJRU5ErkJggg==</icon>
+    <permissions>
+      <permission>full data</permission>
+    </permissions>
   </dashboard-extension>
   <resources>
     <resource id="name">
