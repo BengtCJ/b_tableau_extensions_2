@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest manifest-version="0.1" xmlns="http://www.tableau.com/xml/extension_manifest">
+  <desktop-extension id="com.bengtcj.bpchartextensions2" extension-version="2.0.0">
+    <default-locale>en_US</default-locale>
+    <name resource-id="name"/>
+    <description>Parameter-driven BP chart extension v2</description>
+    <permissions>
+      <permission>full data</permission>
+    </permissions>
+    <source-location>
+      <url>https://bengtcj.github.io/b_tableau_extensions_2/index.html</url>
+    </source-location>
+    <min-api-version>1.7</min-api-version>
+  </desktop-extension>
+  <resources>
+    <resource id="name">
+      <text locale="en_US">BP Chart Extensions 2</text>
+    </resource>
+  </resources>
+</manifest>
