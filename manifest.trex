@@ -1,17 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest manifest-version="0.1" xmlns="http://www.tableau.com/xml/extension_manifest">
-  <desktop-extension id="com.bengtcj.bpchartextensions2" extension-version="2.0.0">
+  <dashboard-extension id="com.bengtcj.bp-charts-2" extension-version="2.0.0">
     <default-locale>en_US</default-locale>
-    <name resource-id="name"/>
-    <description>Parameter-driven BP chart extension v2</description>
-    <permissions>
-      <permission>full data</permission>
-    </permissions>
+    <name resource-id="name">BP Chart Extensions 2</name>
+    <description>Parameter-driven D3 charts for the BP Diagnostic Tool.</description>
+    <author name="BengtCJ" email="" organization="" website="https://bengtcj.github.io"/>
+    <min-api-version>1.4</min-api-version>
     <source-location>
       <url>https://bengtcj.github.io/b_tableau_extensions_2/index.html</url>
     </source-location>
-    <min-api-version>1.7</min-api-version>
-  </desktop-extension>
+    <icon>iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAF0lEQVQ4y2NgYGBg+E8GPgwMBBIHAAAkAAQAkJbGpQAAAABJRU5ErkJggg==</icon>
+  </dashboard-extension>
   <resources>
     <resource id="name">
       <text locale="en_US">BP Chart Extensions 2</text>
