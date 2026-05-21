@@ -343,7 +343,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.22';
+  const VERSION = '2026-05-21.23';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -464,6 +464,64 @@
     ebl:     'Engagements Beyond Likes',
     csl:     'Campaign Sales Lift',
     bt:      'Brand Trust',
+  };
+
+  // ─── INDICATOR UNITS ──────────────────────────────────────────────────────
+  const METRIC_UNITS = {
+    tam:     'USD',
+    cagr:    '%',
+    svt:     '% / index',
+    cat_pen: '%',
+    mcon:    '%',
+    cg_bg:   '%',
+    asp_cat: 'USD',
+    sam:     'USD',
+    som:     'USD',
+    lpa:     '%',
+    pmf:     '%',
+    sop:     '%',
+    str:     '%',
+    cra:     '%',
+    pgc:     '%',
+    pcr:     '%',
+    clv:     'USD',
+    enps:    'pts',
+    eas:     'pts',
+    cpil:    'pts',
+    aa:      '%',
+    ua:      '%',
+    bss:     '%',
+    onssp:   '%',
+    cava:    '%',
+    aus:     '%',
+    dvtr:    '%',
+    esc:     '%',
+    aabc:    'sec / min',
+    sstsr:   '%',
+    eqr:     '%',
+    bslpc:   '% / index',
+    arl:     '%',
+    sv:      '$ / store / wk',
+    cauat:   '%',
+    pcr_st:  '%',
+    ema:     '%',
+    sov:     '%',
+    vom:     '%',
+    pr:      '%',
+    aot:     '%',
+    cvm:     '%',
+    bpbc:    '%',
+    irer:    '%',
+    cbr:     '%',
+    abc:     '#',
+    fcc:     '#',
+    rr:      '%',
+    rsb:     '%',
+    consid:  '%',
+    nps:     '%',
+    ba:      '%',
+    ebl:     '%',
+    csl:     'USD',
   };
 
   // ─── AGGREGATION RULES ────────────────────────────────────────────────────
@@ -691,7 +749,12 @@
     var isTrend = INDICATOR_TREND[CONFIG.metricId];
 
     var titleEl = document.getElementById('chart-title');
-    if (titleEl) titleEl.textContent = METRIC_LABELS[CONFIG.metricId] || CONFIG.metricId || '';
+    if (titleEl) {
+      var label = METRIC_LABELS[CONFIG.metricId] || CONFIG.metricId || '';
+      var unit  = METRIC_UNITS[CONFIG.metricId];
+      titleEl.innerHTML = label +
+        (unit ? ' <span style="font-size:18px;color:#808080;">(' + unit + ')</span>' : '');
+    }
 
     var header = document.getElementById('chart-header');
     if (header) header.style.display = CONFIG.metricId ? 'flex' : 'none';
