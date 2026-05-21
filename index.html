@@ -30,10 +30,24 @@
       overflow: hidden;
     }
 
-    #chart {
+    #app-shell {
+      display: flex;
+      flex-direction: column;
       width: 100%;
       height: 100%;
-      display: block;
+    }
+
+    #chart-header {
+      display: none;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 4px 8px 0;
+      flex-shrink: 0;
+    }
+
+    #chart {
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -222,32 +236,24 @@
     /* ── Configure gear button ── */
     #configure-btn {
       position: fixed;
-      bottom: 8px;
-      right: 8px;
-      width: 26px;
-      height: 26px;
-      background: rgba(233,148,162,0.15);
-      border: 1px solid #e994a2;
-      border-radius: 50%;
-      color: #e994a2;
-      font-size: 13px;
+      bottom: 6px;
+      right: 6px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 10px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       z-index: 100;
-      opacity: 0.4;
+      opacity: 0.15;
       transition: opacity 0.2s;
+      padding: 0;
+      line-height: 1;
     }
-    #configure-btn:hover { opacity: 1; }
+    #configure-btn:hover { opacity: 0.6; }
 
     /* ── View toggle pill ── */
     #view-toggle {
-      position: fixed;
-      bottom: 40px;
-      right: 8px;
-      z-index: 100;
-      display: none;
+      display: block;
     }
 
     .pill-wrap {
@@ -282,18 +288,22 @@
   </style>
 </head>
 <body>
-  <div id="chart"><div class="loading">Loading...</div></div>
-  <button id="configure-btn" title="Configure chart">⚙</button>
-  <div id="view-toggle">
-    <div class="pill-wrap">
-      <button class="pill-btn active" id="btn-qtr">Qtr</button>
-      <button class="pill-btn"        id="btn-mo">Mo</button>
+  <div id="app-shell">
+    <div id="chart-header">
+      <div id="view-toggle">
+        <div class="pill-wrap">
+          <button class="pill-btn active" id="btn-qtr">Qtr</button>
+          <button class="pill-btn"        id="btn-mo">Mo</button>
+        </div>
+      </div>
     </div>
+    <div id="chart"><div class="loading">Loading...</div></div>
   </div>
+  <button id="configure-btn" title="Configure chart">⚙</button>
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.7';
+  const VERSION = '2026-05-21.8';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -581,8 +591,8 @@
   function refreshViewToggle() {
     var isTrend = INDICATOR_TREND[CONFIG.metricId];
     var isMulti = MULTI_PERIOD_CHARTS.indexOf(CONFIG.chart) !== -1;
-    var tog = document.getElementById('view-toggle');
-    if (tog) tog.style.display = (isTrend && isMulti) ? 'block' : 'none';
+    var header = document.getElementById('chart-header');
+    if (header) header.style.display = (isTrend && isMulti) ? 'flex' : 'none';
 
     var qBtn = document.getElementById('btn-qtr');
     var mBtn = document.getElementById('btn-mo');
