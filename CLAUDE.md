@@ -74,6 +74,8 @@ Use the ⚙ settings dialog to switch chart type.
 - Inline styles on chart elements (D3 pattern) — CSS only for shell/dialog
 
 ## Deploy
+Before every commit, bump `VERSION` in index.html. Format: `'YYYY-MM-DD.N'` where N increments from 1 each day (e.g. `2026-05-21.1`, `2026-05-21.2`).
+
 git add index.html && git commit -m "..." && git push
 
 ## Anti-overengineering
