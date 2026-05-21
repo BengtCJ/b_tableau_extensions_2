@@ -343,7 +343,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.24';
+  const VERSION = '2026-05-21.26';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -374,16 +374,16 @@
             'waffle', 'bubbles', 'treemap', 'treemap-bar', 'donut', 'bans',
             'line-smooth', 'line-straight', 'area-100', 'stream', 'small-multiples', 'slope'],
 
-    sstsr: ['hbar', 'scale-figma', 'inset-bubble', 'progress-ring', 'waffle',
-            'vbar-stacked', 'bubbles', 'treemap', 'treemap-bar', 'donut', 'bans',
+    sstsr: ['vbar-stacked', 'hbar', 'scale-figma', 'inset-bubble', 'progress-ring', 'waffle',
+            'bubbles', 'treemap', 'treemap-bar', 'donut', 'bans',
             'line-smooth', 'line-straight', 'area-100', 'stream', 'small-multiples', 'slope'],
 
     // Compositional share (brands sum ~100%), per-brand per-month
-    sov:   ['area-100', 'treemap-bar', 'stream', 'hbar', 'scale-figma', 'bubbles',
-            'inset-bubble', 'line-smooth', 'line-straight', 'small-multiples',
+    sov:   ['inset-bubble', 'area-100', 'treemap-bar', 'stream', 'hbar', 'scale-figma', 'bubbles',
+            'line-smooth', 'line-straight', 'small-multiples',
             'treemap', 'donut', 'bans'],
 
-    bss:   ['area-100', 'treemap-bar', 'stream', 'hbar', 'scale-figma', 'bubbles',
+    bss:   ['treemap-bar', 'area-100', 'stream', 'hbar', 'scale-figma', 'bubbles',
             'inset-bubble', 'line-smooth', 'line-straight', 'small-multiples',
             'treemap', 'donut', 'bans'],
 
@@ -2630,8 +2630,8 @@
     var vMin = d3.min(allVals), vMax = d3.max(allVals);
     var xDomain = vMin < 0 ? [vMin * 1.1, vMax * 1.1] : [0, vMax * 1.1];
 
-    var band = d3.scaleBand().domain(sorted.map(function(d) { return d.name; })).range([0, iH]).padding(0.25);
-    var bandwidth = Math.min(band.bandwidth(), 32);
+    var band = d3.scaleBand().domain(sorted.map(function(d) { return d.name; })).range([0, iH]).padding(0.22);
+    var bandwidth = Math.min(band.bandwidth(), 44);
     var x = d3.scaleLinear().domain(xDomain).range([0, iW]);
 
     var svgEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -2663,8 +2663,8 @@
       var isPrimary = d.name === primary;
       var col = isPrimary ? D.primary : D.comp;
       var rowY = band(d.name);
-      var barY = rowY + (band.bandwidth() - Math.min(bandwidth, 20)) / 2;
-      var barH = Math.min(bandwidth, 20);
+      var barY = rowY + (band.bandwidth() - bandwidth) / 2;
+      var barH = bandwidth;
       var barX = vMin < 0 ? x(Math.min(d.value, 0)) : 0;
       var barW = Math.abs(x(d.value) - x(0));
 
