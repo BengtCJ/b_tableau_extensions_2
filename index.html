@@ -39,10 +39,12 @@
 
     #chart-header {
       display: none;
-      flex-direction: column;
-      padding: 12px 12px 32px;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px 24px;
       flex-shrink: 0;
-      gap: 18px;
+      gap: 16px;
     }
     #chart-title {
       font-family: 'Baskervville', 'Baskerville', Georgia, serif;
@@ -51,11 +53,13 @@
       color: #e6e6e6;
       line-height: 1;
       padding: 0 2px;
+      flex: 1;
     }
     #pills-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     #period-selector {
@@ -67,9 +71,9 @@
 
     .period-btn {
       border: none;
-      height: 46px;
-      padding: 0 14px;
-      font-size: 10px;
+      height: 30px;
+      padding: 0 10px;
+      font-size: 9px;
       font-family: 'Tableau Light', 'Helvetica Neue', Arial, sans-serif;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -303,9 +307,9 @@
 
     .pill-btn {
       border: none;
-      height: 46px;
-      padding: 0 22px;
-      font-size: 11px;
+      height: 30px;
+      padding: 0 14px;
+      font-size: 10px;
       font-family: 'Tableau Light', 'Helvetica Neue', Arial, sans-serif;
       letter-spacing: 0.10em;
       text-transform: uppercase;
@@ -343,7 +347,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.28';
+  const VERSION = '2026-05-21.29';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
