@@ -347,7 +347,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.30';
+  const VERSION = '2026-05-21.31';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -822,10 +822,25 @@
       if (isMultiPeriod) {
         data = _allData;
       } else {
-        var ps = [];
-        _allData.forEach(function(d) { if (d.period && ps.indexOf(d.period) === -1) ps.push(d.period); });
-        ps.sort();
-        data = ps.length > 1 ? _allData.filter(function(d) { return d.period === ps[ps.length - 1]; }) : _allData;
+        var aggRule = INDICATOR_AGGREGATION[CONFIG.metricId] || 'avg';
+        if (aggRule === 'none') {
+          // No meaningful aggregation — use last period only
+          var allPs = [];
+          _allData.forEach(function(d) { if (d.period && allPs.indexOf(d.period) === -1) allPs.push(d.period); });
+          allPs.sort();
+          data = allPs.length > 1 ? _allData.filter(function(d) { return d.period === allPs[allPs.length - 1]; }) : _allData;
+        } else {
+          // Aggregate all periods per brand (sum or average)
+          var grouped = {};
+          _allData.forEach(function(d) {
+            if (!grouped[d.name]) grouped[d.name] = [];
+            grouped[d.name].push(d.value);
+          });
+          data = Object.keys(grouped).map(function(name) {
+            var vals = grouped[name];
+            return { name: name, value: aggRule === 'sum' ? d3.sum(vals) : d3.mean(vals) };
+          });
+        }
       }
     }
     refreshPeriodSelector();
