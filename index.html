@@ -328,7 +328,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.14';
+  const VERSION = '2026-05-21.15';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -1369,8 +1369,9 @@
     var rect = el.getBoundingClientRect();
     var W = rect.width  || window.innerWidth  || 480;
     var H = rect.height || window.innerHeight || 300;
-    var available = W - 290;
-    var R = Math.min(H * 0.44, available * 0.5, 120, H < 200 ? 60 : Infinity);
+    var legendW = Math.min(Math.floor(W * 0.38), 220);
+    var available = W - legendW;
+    var R = Math.min(H * 0.44, available * 0.5, H < 200 ? 60 : 150);
     var inner = R * 0.46;
 
     el.style.display        = 'flex';
@@ -1649,8 +1650,10 @@
   function renderBAN(el, data, selectedBrand, D) {
     var sel = (Array.isArray(data) ? data.find(function(d) { return d.name === selectedBrand; }) || data[0] : null);
     var value = sel ? sel.value : (data && !Array.isArray(data) ? data : null);
-    var W = el.offsetWidth || window.innerWidth || 200;
-    var fontSize = Math.min(Math.max(W * 0.22, 40), 96);
+    var rect = el.getBoundingClientRect();
+    var W = rect.width || window.innerWidth || 200;
+    var H = rect.height || window.innerHeight || 200;
+    var fontSize = Math.min(Math.max(Math.min(W, H * 2) * 0.22, 40), 96);
 
     el.style.display        = 'flex';
     el.style.flexDirection  = 'column';
@@ -1719,7 +1722,7 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var mT = 12, mR = 80, mB = 28, mL = 38;
+    var mT = 12, mR = 100, mB = 28, mL = 38;
     var iW = W - mL - mR, iH = H - mT - mB;
 
     var brands = Object.keys(data[0]).filter(function(k) { return k !== 'period'; });
@@ -1831,7 +1834,7 @@
       }
     }
 
-    var mT = 32, mR = 90, mB = 12, mL = 90;
+    var mT = 32, mR = 90, mB = 20, mL = 90;
     var iW = W - mL - mR, iH = H - mT - mB;
     var allVals = plotData.flatMap(function(d) { return [d.v1, d.v2]; });
     var y = d3.scaleLinear().domain([0, d3.max(allVals) * 1.1]).range([iH, 0]);
@@ -1901,7 +1904,7 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var mT = 10, mR = 52, mB = 28, mL = 32;
+    var mT = 10, mR = 72, mB = 28, mL = 32;
     var iW = W - mL - mR, iH = H - mT - mB;
 
     var brands = Object.keys(data[0]).filter(function(k) { return k !== 'period'; });
@@ -2089,10 +2092,11 @@
 
   // ─── TREEMAP BAR ──────────────────────────────────────────────────────────
   function renderTreemapBar(el, data, primary, D) {
-    var W = el.offsetWidth || 500;
+    var rect = el.getBoundingClientRect(); var W = rect.width || 500, H = rect.height || 72;
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var H = 72, gap = 3;
+    H = Math.min(Math.max(Math.floor(H * 0.60), 50), 110);
+    var gap = 3;
     var sorted = data.slice().sort(function(a,b) { return b.value - a.value; });
     var total  = d3.sum(sorted, function(d) { return d.value; });
     var usableW = W - gap * (sorted.length - 1);
@@ -2345,13 +2349,12 @@
     ];
     var n = sorted.length;
     var slotW = W / n;
-    var R  = Math.min(52, slotW / 2 - 10);
+    var R  = Math.min(H < 200 ? 40 : 70, slotW / 2 - 10);
     var sw = Math.max(8, R * 0.22);
-    var cy = R + 14;
-    var svgH = R * 2 + 50;
+    var cy = Math.max(R + 8, Math.min(H / 2, H - R - 22));
 
     var svgEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + svgH); svgEl.style.width='100%'; svgEl.style.height=svgH+'px'; svgEl.style.display='block';
+    svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svgEl.style.width='100%'; svgEl.style.height='100%'; svgEl.style.display='block';
     var svg = d3.select(svgEl);
 
     var arcTrack = d3.arc().innerRadius(R-sw).outerRadius(R).startAngle(-Math.PI).endAngle(Math.PI);
@@ -2398,16 +2401,19 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var step = 8, r = 3, cols = 10;
-    var blockW = cols * step - 2, blockH = cols * step - 2;
-    var svgH = blockH + 22;
-
     var sorted = [
       ...data.filter(function(d) { return d.name === primary; }),
       ...data.filter(function(d) { return d.name !== primary; }).sort(function(a,b) { return b.promoterFraction - a.promoterFraction; }),
     ];
     var n = sorted.length;
-    var brandGap = Math.max(10, (W - n * blockW) / Math.max(n-1,1));
+    var cols = 10, labelH = 22;
+    var maxBlockW = n > 1 ? Math.floor((W - (n-1) * 10) / n) : Math.floor(W * 0.8);
+    var availH = Math.max(H - labelH - 8, 40);
+    var step = Math.max(4, Math.min(Math.floor(availH / cols), Math.floor(maxBlockW / cols)));
+    var r = Math.max(1.2, step * 0.34);
+    var blockW = cols * step + 2, blockH = cols * step + 2;
+    var svgH = blockH + labelH;
+    var brandGap = Math.max(6, (W - n * blockW) / Math.max(n-1,1));
 
     var svgEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + svgH); svgEl.style.width='100%'; svgEl.style.height=svgH+'px'; svgEl.style.display='block';
@@ -2451,7 +2457,7 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var mT = 12, mR = 72, mB = 8, mL = 100;
+    var mT = 12, mR = 72, mB = 8, mL = Math.max(80, Math.min(Math.floor(W * 0.20), 130));
     var iW = W - mL - mR, iH = H - mT - mB;
 
     var sorted = [
@@ -2608,7 +2614,7 @@
     var xScale = d3.scaleLinear().domain(domain).range([0, trackW]);
     var xZero  = xScale(Math.max(domain[0], 0));
 
-    el.style.padding = '8px 0';
+    el.style.padding = '12px 0';
     el.style.overflowY = 'auto';
 
     sorted.forEach(function(d, i) {
@@ -2762,16 +2768,19 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var step = 7, r = 2.5, cols = 10;
-    var blockW = cols * step - 2, blockH = cols * step - 2;
-    var svgH = blockH + 22;
-
     var sorted = [
       ...data.filter(function(d) { return d.name === primary; }),
       ...data.filter(function(d) { return d.name !== primary; }).sort(function(a,b) { return b.promoterFraction - a.promoterFraction; }),
     ];
     var n = sorted.length;
-    var brandGap = Math.max(8, (W - n * blockW) / Math.max(n-1,1));
+    var cols = 10, topLabelH = 24;
+    var maxBlockW = n > 1 ? Math.floor((W - (n-1) * 8) / n) : Math.floor(W * 0.8);
+    var availH = Math.max(H - topLabelH - 4, 40);
+    var step = Math.max(4, Math.min(Math.floor(availH / cols), Math.floor(maxBlockW / cols)));
+    var r = Math.max(1.2, step * 0.34);
+    var blockW = cols * step + 2, blockH = cols * step + 2;
+    var svgH = blockH + topLabelH;
+    var brandGap = Math.max(6, (W - n * blockW) / Math.max(n-1,1));
 
     var svgEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + svgH); svgEl.style.width='100%'; svgEl.style.height=svgH+'px'; svgEl.style.display='block';
@@ -2818,7 +2827,7 @@
     var periods = data.map(function(d) { return d.period; });
     var n = brands.length;
     var panelW = Math.floor(W / n);
-    var cellH  = H < 220 ? 52 : 88;
+    var cellH  = Math.min(Math.max(Math.floor(H * 0.72), 40), 140);
     var labelH = 18;
     var svgH   = cellH + labelH;
     var iW = panelW - 8, iH = cellH - 4;
@@ -2888,7 +2897,8 @@
     var illyNps     = data.illy ? data.illy.nps : 0;
     var competitors = data.competitors || [];
 
-    var cx = W * 0.40, cy = H * 0.85;
+    var cx = (W >= 400 && competitors.length > 0) ? W * 0.40 : W * 0.48;
+    var cy = H * 0.85;
     var R  = Math.min(cx, cy * 0.70);
     var sw = Math.max(20, R * 0.18);
 
