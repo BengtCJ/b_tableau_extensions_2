@@ -343,7 +343,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.19';
+  const VERSION = '2026-05-21.20';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -1748,15 +1748,11 @@
     el.style.gap            = '8px';
 
     var displayVal = value !== null && value !== undefined ? parseFloat(value).toFixed(2) : '--';
-    var displayLbl = sel ? sel.name : (selectedBrand || '');
 
     el.innerHTML =
       '<div style="font-size:' + fontSize + 'px;font-weight:400;line-height:1;' +
       'color:' + D.value.color + ';font-family:' + D.value.font + ';font-style:' + D.value.style + ';">' +
-      displayVal + '</div>' +
-      '<div style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;' +
-      'color:' + D.label.color + ';font-family:' + D.label.font + ';">' +
-      displayLbl + '</div>';
+      displayVal + '</div>';
   }
 
   // ─── BANs ─────────────────────────────────────────────────────────────────
