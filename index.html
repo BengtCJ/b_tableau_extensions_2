@@ -347,7 +347,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.29';
+  const VERSION = '2026-05-21.30';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -1813,7 +1813,7 @@
     var rect = el.getBoundingClientRect();
     var W = rect.width || window.innerWidth || 200;
     var H = rect.height || window.innerHeight || 200;
-    var fontSize = Math.min(Math.max(Math.min(W, H * 2) * 0.22, 40), 96);
+    var fontSize = Math.min(Math.max(H * 0.48, 48), 180);
 
     el.style.display        = 'flex';
     el.style.flexDirection  = 'column';
@@ -1841,10 +1841,10 @@
       ...data.filter(function(d) { return d.name !== primary; }).sort(function(a,b) { return b.value - a.value; }),
     ];
 
-    var primaryFontSize = Math.min(Math.max(Math.floor(H * 0.42), 36), 96);
-    var compFontSize    = Math.min(Math.max(Math.floor(H * 0.22), 20), 56);
-    var labelFontSize   = Math.max(Math.floor(H * 0.045), 9);
-    var pad             = Math.max(14, Math.floor(Math.min(W, H) * 0.05));
+    var primaryFontSize = Math.min(Math.max(Math.floor(H * 0.52), 48), 160);
+    var compFontSize    = Math.min(Math.max(Math.floor(H * 0.30), 28), 100);
+    var labelFontSize   = Math.max(Math.floor(H * 0.055), 9);
+    var pad             = Math.max(10, Math.floor(Math.min(W, H) * 0.03));
 
     el.style.display        = 'flex';
     el.style.alignItems     = 'center';
@@ -2763,10 +2763,18 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
-    var scoreW = 64, trackW = W - scoreW;
-    var trackH = H < 220 ? 24 : 34;
-    var barH   = H < 220 ? 18 : 28;
-    var rowGap = 5;
+    var nRows    = sorted.length;
+    var padV     = 10;
+    var axisH    = 20;
+    var rowH     = Math.max(22, Math.floor((H - padV * 2 - axisH) / nRows));
+    var labelSz  = Math.min(10, Math.max(7,  Math.floor(rowH * 0.22)));
+    var labelMb  = Math.max(2,  Math.floor(rowH * 0.07));
+    var rowGap   = Math.max(2,  Math.floor(rowH * 0.08));
+    var trackH   = Math.max(14, rowH - labelSz - labelMb - rowGap);
+    var barH     = Math.max(8,  Math.floor(trackH * 0.72));
+    var scoreSz  = Math.min(18, Math.max(10, Math.floor(rowH * 0.38)));
+    var scoreW   = Math.ceil(scoreSz * 3.8);
+    var trackW   = W - scoreW;
 
     var sorted = [
       ...data.filter(function(d) { return d.name === primary; }),
@@ -2779,8 +2787,8 @@
     var xScale = d3.scaleLinear().domain(domain).range([0, trackW]);
     var xZero  = xScale(Math.max(domain[0], 0));
 
-    el.style.padding = '12px 0';
-    el.style.overflowY = 'auto';
+    el.style.padding = padV + 'px 0';
+    el.style.overflowY = 'hidden';
 
     sorted.forEach(function(d, i) {
       var isPrimary = d.name === primary;
@@ -2797,8 +2805,8 @@
       }
 
       var lbl = document.createElement('div');
-      lbl.style.cssText = 'font-family:' + FONT_LIGHT + ';font-size:' + (isPrimary?'8.5':'8') + 'px;' +
-        'text-transform:uppercase;letter-spacing:0.10em;color:' + col + ';margin-bottom:3px;';
+      lbl.style.cssText = 'font-family:' + FONT_LIGHT + ';font-size:' + (isPrimary ? labelSz : Math.max(6, labelSz - 1)) + 'px;' +
+        'text-transform:uppercase;letter-spacing:0.10em;color:' + col + ';margin-bottom:' + labelMb + 'px;';
       lbl.textContent = d.name;
       row.appendChild(lbl);
 
@@ -2828,9 +2836,9 @@
       flex.appendChild(svgEl);
 
       var score = document.createElement('div');
-      score.style.cssText = 'width:' + scoreW + 'px;padding-left:10px;' +
+      score.style.cssText = 'width:' + scoreW + 'px;padding-left:8px;' +
         'font-family:' + FONT_TITLE + ';font-style:italic;font-size:' +
-        (isPrimary ? '15':'14') + 'px;color:' + col + ';';
+        (isPrimary ? scoreSz : Math.max(9, scoreSz - 1)) + 'px;color:' + col + ';';
       score.textContent = d.value.toFixed(3);
       flex.appendChild(score);
 
