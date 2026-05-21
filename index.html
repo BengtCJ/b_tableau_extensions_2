@@ -39,11 +39,23 @@
 
     #chart-header {
       display: none;
+      flex-direction: column;
+      padding: 10px 10px 0;
+      flex-shrink: 0;
+      gap: 6px;
+    }
+    #chart-title {
+      font-family: 'Baskervville', 'Baskerville', Georgia, serif;
+      font-style: italic;
+      font-size: 26px;
+      color: #e6e6e6;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    #pills-row {
+      display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 10px 0;
-      flex-shrink: 0;
-      min-height: 58px;
     }
 
     #period-selector {
@@ -314,11 +326,14 @@
 <body>
   <div id="app-shell">
     <div id="chart-header">
-      <div id="period-selector"></div>
-      <div id="view-toggle">
-        <div class="pill-wrap">
-          <button class="pill-btn active" id="btn-qtr">Quarters</button>
-          <button class="pill-btn"        id="btn-mo">Months</button>
+      <div id="chart-title"></div>
+      <div id="pills-row">
+        <div id="period-selector"></div>
+        <div id="view-toggle">
+          <div class="pill-wrap">
+            <button class="pill-btn active" id="btn-qtr">Quarters</button>
+            <button class="pill-btn"        id="btn-mo">Months</button>
+          </div>
         </div>
       </div>
     </div>
@@ -328,7 +343,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.17';
+  const VERSION = '2026-05-21.18';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -388,6 +403,67 @@
 
     // Brand attributes — multiscale blocked until multi-attribute data confirmed
     ba:    ['hbar', 'scale-figma', 'bans', 'ban'],
+  };
+
+  // ─── INDICATOR DISPLAY NAMES ─────────────────────────────────────────────
+  const METRIC_LABELS = {
+    tam:     'Total Addressable Market (TAM)',
+    cagr:    'Compound Annual Growth Rate (CAGR)',
+    svt:     'Search Volume and Trends',
+    cat_pen: 'Category Penetration',
+    mcon:    'Market Concentration',
+    cg_bg:   'Category Growth vs Brand Growth',
+    asp_cat: 'Average Selling Price vs Category Average',
+    sam:     'Serviceable Available Market (SAM)',
+    som:     'Serviceable Obtainable Market (SOM)',
+    lpa:     'Lifestyle & Psychographic Alignment',
+    pmf:     'Product / Market Fit (PMF)',
+    sop:     'Share of Preference',
+    str:     'Sell-Through Rate',
+    cra:     'Conversion Rate Analysis',
+    pgc:     'Portfolio Growth Contribution',
+    pcr:     'Portfolio Cannibalization Rate',
+    clv:     'Customer Lifetime Value (CLV)',
+    pcws:    'Portfolio Coverage & White Space',
+    ic:      'Innovation Contribution',
+    enps:    'Employer Net Promoter Score (ENPS)',
+    eas:     'Employer Brand Attractiveness Score',
+    cpil:    'Company Perceived Innovation & Leadership',
+    aa:      'Aided Awareness',
+    ua:      'Unaided Awareness',
+    bss:     'Branded Search Share',
+    onssp:   'Occasion / Need-State Search Presence',
+    cava:    'Correct Attribution of Visual & Verbal Assets',
+    aus:     'Asset Uniqueness Score',
+    dvtr:    'Distinctive Verbal Tone Recognition',
+    esc:     'Emergent Semiotic Codes',
+    aabc:    'Avg. Attention on Brand Content',
+    sstsr:   'Scroll-Stop / Thumb-Stop Ratio',
+    eqr:     'Engagement Quality Ratio',
+    bslpc:   'Branded Search Lift Post-Campaign',
+    arl:     'Ad Recall Uplift',
+    sv:      'Shelf Velocity',
+    cauat:   'Consistency of Asset Usage Across Touchpoints',
+    pcr_st:  'Perceived Consistency Rate',
+    ema:     'Earned Message Alignment',
+    sov:     'Share of Voice (SOV)',
+    vom:     'Velocity of Mentions',
+    pr:      'Pickup Rate',
+    aot:     'Audience Overlap with Tastemakers',
+    cvm:     'Campaign Virality / Meme-ability',
+    bpbc:    'Brand Presence Beyond Core Category',
+    irer:    'Identity-Reinforcing Engagement Ratio',
+    cbr:     'Cultural Badging Rate',
+    abc:     'Active Brand Communities',
+    fcc:     'Fan Co-Creation',
+    rr:      'Ritualization Rate',
+    rsb:     'Resistance to Switching Brands',
+    consid:  'Consideration',
+    nps:     'Net Promoter Score',
+    ba:      'Brand Affinity',
+    ebl:     'Engagements Beyond Likes',
+    csl:     'Campaign Sales Lift',
+    bt:      'Brand Trust',
   };
 
   // ─── AGGREGATION RULES ────────────────────────────────────────────────────
@@ -613,8 +689,15 @@
 
   function refreshViewToggle() {
     var isTrend = INDICATOR_TREND[CONFIG.metricId];
+
+    var titleEl = document.getElementById('chart-title');
+    if (titleEl) titleEl.textContent = METRIC_LABELS[CONFIG.metricId] || CONFIG.metricId || '';
+
     var header = document.getElementById('chart-header');
-    if (header) header.style.display = isTrend ? 'flex' : 'none';
+    if (header) header.style.display = CONFIG.metricId ? 'flex' : 'none';
+
+    var pillsRow = document.getElementById('pills-row');
+    if (pillsRow) pillsRow.style.display = isTrend ? 'flex' : 'none';
 
     var qBtn = document.getElementById('btn-qtr');
     var mBtn = document.getElementById('btn-mo');
