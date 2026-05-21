@@ -1037,12 +1037,28 @@
         return;
       }
 
+      // Read parameters first so CONFIG.metricId is set before the initial render
+      var allParams = await _dashboard.getParametersAsync();
+
+      var indicatorParam = allParams.find(function(p) { return p.name === CONFIG.indicatorParameter; });
+      if (indicatorParam) {
+        var initId = (indicatorParam.currentValue.value ||
+                      indicatorParam.currentValue.formattedValue || '').trim().toLowerCase();
+        if (initId) {
+          CONFIG.metricId = initId;
+          CONFIG.chart    = resolveChart(initId);
+          console.log('Indicator parameter initial value:', initId, '→ chart:', CONFIG.chart);
+        } else {
+          console.warn('Indicator parameter "' + CONFIG.indicatorParameter + '" found but has no value.');
+        }
+      } else {
+        console.warn('Indicator parameter "' + CONFIG.indicatorParameter + '" not found. Available:', allParams.map(function(p) { return p.name; }).join(', '));
+      }
+
       try { await worksheet.clearSelectedMarksAsync(); } catch(e) {}
       await fetchAndRender(worksheet, _dashboard);
 
-      var allParams = await _dashboard.getParametersAsync();
-
-      // Brand parameter listener (existing behaviour)
+      // Brand parameter listener
       var brandParam = allParams.find(function(p) { return p.name === CONFIG.parameter; });
       if (brandParam) {
         brandParam.addEventListener(tableau.TableauEventType.ParameterChanged, function() {
@@ -1050,23 +1066,14 @@
         });
       }
 
-      // Indicator parameter listener (new)
-      var indicatorParam = allParams.find(function(p) { return p.name === CONFIG.indicatorParameter; });
+      // Indicator parameter change listener
       if (indicatorParam) {
-        // Set initial state from parameter
-        var initId = (indicatorParam.currentValue.value ||
-                      indicatorParam.currentValue.formattedValue || '').trim().toLowerCase();
-        if (initId) {
-          CONFIG.metricId = initId;
-          CONFIG.chart    = resolveChart(initId);
-        }
-
         indicatorParam.addEventListener(tableau.TableauEventType.ParameterChanged, async function(e) {
           var p  = await e.getParameterAsync();
           var id = (p.currentValue.value || p.currentValue.formattedValue || '').trim().toLowerCase();
           CONFIG.metricId = id;
           CONFIG.chart    = resolveChart(id);
-          _selectedBrand  = null; // reset selection on indicator change; re-resolves from brand param
+          _selectedBrand  = null;
           await fetchAndRender(worksheet, _dashboard);
         });
       }
