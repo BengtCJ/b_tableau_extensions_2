@@ -347,7 +347,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.31';
+  const VERSION = '2026-05-21.32';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -2718,10 +2718,11 @@
     var mT = 10, mR = 8, mB = 26, mL = 30;
     var iW = W - mL - mR, iH = H - mT - mB;
 
-    // Support both explicit active/passive and ratio 0-1 value
+    // Support explicit active/passive or a ratio value (0–1 or 0–100)
     var plotData = data.map(function(d) {
       if (d.active !== undefined) return d;
-      return { name: d.name, active: d.value, passive: 1 - d.value };
+      var v = d.value > 1 ? d.value / 100 : d.value;
+      return { name: d.name, active: v, passive: 1 - v };
     });
 
     var sorted = sortWithPrimaryLast(plotData, primary);
@@ -2778,6 +2779,11 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
+    var sorted = [
+      ...data.filter(function(d) { return d.name === primary; }),
+      ...data.filter(function(d) { return d.name !== primary; }).sort(function(a,b) { return b.value - a.value; }),
+    ];
+
     var nRows    = sorted.length;
     var padV     = 10;
     var axisH    = 20;
@@ -2790,11 +2796,6 @@
     var scoreSz  = Math.min(18, Math.max(10, Math.floor(rowH * 0.38)));
     var scoreW   = Math.ceil(scoreSz * 3.8);
     var trackW   = W - scoreW;
-
-    var sorted = [
-      ...data.filter(function(d) { return d.name === primary; }),
-      ...data.filter(function(d) { return d.name !== primary; }).sort(function(a,b) { return b.value - a.value; }),
-    ];
 
     var allVals  = data.map(function(d) { return d.value; });
     var vMin = d3.min(allVals), vMax = d3.max(allVals);
