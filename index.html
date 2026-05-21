@@ -41,8 +41,9 @@
       display: none;
       justify-content: flex-end;
       align-items: center;
-      padding: 4px 8px 0;
+      padding: 6px 10px 0;
       flex-shrink: 0;
+      min-height: 58px;
     }
 
     #chart {
@@ -253,23 +254,24 @@
       display: flex;
       align-items: center;
       background: #111111;
-      border-radius: 6px;
-      padding: 2px;
-      gap: 1px;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
     }
 
     .pill-btn {
       border: none;
-      padding: 2px 8px;
-      font-size: 9px;
+      height: 46px;
+      padding: 0 22px;
+      font-size: 11px;
       font-family: 'Tableau Light', 'Helvetica Neue', Arial, sans-serif;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.10em;
       text-transform: uppercase;
       cursor: pointer;
       background: transparent;
       color: #444;
-      border-radius: 4px;
+      border-radius: 6px;
       transition: background 0.15s, color 0.15s, box-shadow 0.15s;
     }
 
@@ -296,7 +298,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.9';
+  const VERSION = '2026-05-21.10';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -2037,38 +2039,86 @@
     if (H < 120) { showTooSmall(el); return; }
     if (!data || !data.length) { showEmpty(el); return; }
 
+    var primaryData = data.find(function(d) { return d.name === primary; });
+    var competitors = data.filter(function(d) { return d.name !== primary; })
+      .sort(function(a, b) { return b.value - a.value; });
+
     var svgEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svgEl.setAttribute('width', W); svgEl.setAttribute('height', H);
     var svg = d3.select(svgEl);
 
-    var pack = d3.pack().size([W, H]).padding(4);
-    var root = d3.hierarchy({ children: sortWithPrimaryLast(data, primary) }).sum(function(d) { return d.value; });
-    var nodes = pack(root).leaves();
+    var leftW = Math.floor(W * 0.42);
+    var rightW = W - leftW;
 
-    nodes.forEach(function(node, i) {
-      var isPrimary = node.data.name === primary;
-      var g = svg.append('g').attr('transform','translate(' + node.x + ',' + node.y + ')');
+    // Subtle divider
+    svg.append('line')
+      .attr('x1', leftW).attr('y1', H * 0.08)
+      .attr('x2', leftW).attr('y2', H * 0.92)
+      .attr('stroke', COL_GRID).attr('stroke-width', 1).attr('opacity', 0.4);
 
-      g.append('circle').attr('r',0)
-        .attr('fill', isPrimary ? D.primary : D.comp)
-        .attr('fill-opacity', isPrimary ? 1 : 0.72)
-        .attr('data-brand', node.data.name).style('cursor','pointer')
-        .on('click', (function(name) { return async function() { await selectBrand(name, _dashboard); }; })(node.data.name))
-        .transition().duration(400).delay(i*40).ease(d3.easeBackOut).attr('r', node.r);
-
-      if (node.r > 14)
-        g.append('text').attr('y', node.r > 24 ? -4 : 4).attr('text-anchor','middle')
-          .style('font-size', Math.min(11, node.r*0.32) + 'px')
+    // Primary hero circle
+    if (primaryData) {
+      var pR = Math.min(leftW / 2 - 14, H / 2 - 28);
+      pR = Math.max(pR, 20);
+      var pX = leftW / 2, pY = H / 2;
+      var pg = svg.append('g').attr('transform', 'translate(' + pX + ',' + pY + ')');
+      pg.append('circle').attr('r', 0)
+        .attr('fill', D.primary).attr('fill-opacity', 1)
+        .attr('data-brand', primaryData.name).style('cursor','pointer')
+        .on('click', (function(nm) { return async function() { await selectBrand(nm, _dashboard); }; })(primaryData.name))
+        .transition().duration(500).ease(d3.easeBackOut).attr('r', pR);
+      if (pR > 16)
+        pg.append('text').attr('y', pR > 32 ? -7 : 4).attr('text-anchor','middle')
+          .style('font-size', Math.min(13, pR * 0.26) + 'px')
           .style('font-family', FONT_LIGHT).style('text-transform','uppercase')
           .style('fill', COL_LIGHT_GREY).style('pointer-events','none')
-          .text(node.data.name.slice(0,4));
-      if (node.r > 24)
-        g.append('text').attr('y',10).attr('text-anchor','middle')
-          .style('font-size', Math.min(10, node.r*0.26) + 'px')
+          .text(primaryData.name.length > 7 ? primaryData.name.slice(0, 7) : primaryData.name);
+      if (pR > 32)
+        pg.append('text').attr('y', 10).attr('text-anchor','middle')
+          .style('font-size', Math.min(16, pR * 0.28) + 'px')
           .style('font-family', FONT_TITLE).style('font-style','italic')
           .style('fill', COL_LIGHT_GREY).style('pointer-events','none')
-          .text(node.data.value.toFixed(2));
-    });
+          .text(primaryData.value.toFixed(2));
+    }
+
+    // Competitor 2-column grid
+    var nComp = competitors.length;
+    if (nComp > 0) {
+      var nCols = 2;
+      var nRows = Math.ceil(nComp / nCols);
+      var cellW = rightW / nCols;
+      var cellH = H / nRows;
+      var maxR = Math.min(cellW / 2 - 8, cellH / 2 - 14);
+      var primaryVal = primaryData ? Math.abs(primaryData.value) : 1;
+
+      competitors.forEach(function(comp, i) {
+        var col = i % nCols;
+        var row = Math.floor(i / nCols);
+        var cx = leftW + col * cellW + cellW / 2;
+        var cy = row * cellH + cellH / 2;
+        var ratio = primaryVal > 0 ? Math.sqrt(Math.abs(comp.value) / primaryVal) : 0.5;
+        var r = Math.min(maxR, Math.max(8, maxR * ratio));
+
+        var cg = svg.append('g').attr('transform', 'translate(' + cx + ',' + cy + ')');
+        cg.append('circle').attr('r', 0)
+          .attr('fill', D.comp).attr('fill-opacity', 0.72)
+          .attr('data-brand', comp.name).style('cursor','pointer')
+          .on('click', (function(nm) { return async function() { await selectBrand(nm, _dashboard); }; })(comp.name))
+          .transition().duration(400).delay(i * 50 + 100).ease(d3.easeBackOut).attr('r', r);
+        if (r > 14)
+          cg.append('text').attr('y', r > 22 ? -4 : 4).attr('text-anchor','middle')
+            .style('font-size', Math.min(10, r * 0.34) + 'px')
+            .style('font-family', FONT_LIGHT).style('text-transform','uppercase')
+            .style('fill', COL_LIGHT_GREY).style('pointer-events','none')
+            .text(comp.name.slice(0, 4));
+        if (r > 22)
+          cg.append('text').attr('y', 10).attr('text-anchor','middle')
+            .style('font-size', Math.min(9, r * 0.26) + 'px')
+            .style('font-family', FONT_TITLE).style('font-style','italic')
+            .style('fill', COL_LIGHT_GREY).style('pointer-events','none')
+            .text(comp.value.toFixed(2));
+      });
+    }
 
     el.appendChild(svgEl);
   }
