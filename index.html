@@ -39,11 +39,39 @@
 
     #chart-header {
       display: none;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
       padding: 6px 10px 0;
       flex-shrink: 0;
       min-height: 58px;
+    }
+
+    #period-selector {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-wrap: wrap;
+    }
+
+    .period-btn {
+      border: none;
+      height: 46px;
+      padding: 0 14px;
+      font-size: 10px;
+      font-family: 'Tableau Light', 'Helvetica Neue', Arial, sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: transparent;
+      color: #444;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .period-btn.active {
+      background: #2e2e2e;
+      color: #e6e6e6;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
     #chart {
@@ -286,6 +314,7 @@
 <body>
   <div id="app-shell">
     <div id="chart-header">
+      <div id="period-selector"></div>
       <div id="view-toggle">
         <div class="pill-wrap">
           <button class="pill-btn active" id="btn-qtr">Quarters</button>
@@ -299,7 +328,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.13';
+  const VERSION = '2026-05-21.14';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -572,6 +601,7 @@
   // ─── VIEW TOGGLE ─────────────────────────────────────────────────────────
   function setViewMode(mode) {
     _viewMode = mode;
+    _selectedPeriod = 'all';
     refreshViewToggle();
     if (_dashboard) {
       var worksheet = _dashboard.worksheets.find(function(ws) { return ws.name === CONFIG.worksheet; });
@@ -588,14 +618,66 @@
 
     var qBtn = document.getElementById('btn-qtr');
     var mBtn = document.getElementById('btn-mo');
-    if (!qBtn || !mBtn) return;
-    if (_viewMode === 'quarterly') {
-      qBtn.className = 'pill-btn active';
-      mBtn.className = 'pill-btn';
-    } else {
-      qBtn.className = 'pill-btn';
-      mBtn.className = 'pill-btn active';
+    if (qBtn && mBtn) {
+      if (_viewMode === 'quarterly') {
+        qBtn.className = 'pill-btn active';
+        mBtn.className = 'pill-btn';
+      } else {
+        qBtn.className = 'pill-btn';
+        mBtn.className = 'pill-btn active';
+      }
     }
+    refreshPeriodSelector();
+  }
+
+  function refreshPeriodSelector() {
+    var el = document.getElementById('period-selector');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!_allData || !INDICATOR_TREND[CONFIG.metricId]) return;
+    var periods = [];
+    _allData.forEach(function(d) {
+      if (d.period && periods.indexOf(d.period) === -1) periods.push(d.period);
+    });
+    periods.sort();
+    if (periods.length <= 1) return;
+
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;background:#111111;border-radius:8px;padding:3px;gap:2px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);';
+    ['all'].concat(periods).forEach(function(p) {
+      var isActive = _selectedPeriod === p;
+      var btn = document.createElement('button');
+      btn.textContent = p === 'all' ? 'All' : p;
+      btn.className = 'period-btn' + (isActive ? ' active' : '');
+      btn.onclick = function() {
+        _selectedPeriod = p;
+        applyPeriodAndRender();
+      };
+      wrap.appendChild(btn);
+    });
+    el.appendChild(wrap);
+  }
+
+  function applyPeriodAndRender() {
+    if (!_allData) return;
+    var isMultiPeriod = MULTI_PERIOD_CHARTS.indexOf(CONFIG.chart) !== -1;
+    var data;
+    if (_selectedPeriod !== 'all') {
+      data = _allData.filter(function(d) { return d.period === _selectedPeriod; });
+      if (!data.length) { _selectedPeriod = 'all'; data = null; }
+    }
+    if (!data) {
+      if (isMultiPeriod) {
+        data = _allData;
+      } else {
+        var ps = [];
+        _allData.forEach(function(d) { if (d.period && ps.indexOf(d.period) === -1) ps.push(d.period); });
+        ps.sort();
+        data = ps.length > 1 ? _allData.filter(function(d) { return d.period === ps[ps.length - 1]; }) : _allData;
+      }
+    }
+    refreshPeriodSelector();
+    renderChart(data, _clientBrand, _dashboard);
   }
 
   document.getElementById('btn-qtr').onclick = function() { setViewMode('quarterly'); };
@@ -619,13 +701,15 @@
   };
 
   // ─── STATE ────────────────────────────────────────────────────────────────
-  let _dashboard     = null;
-  let _lastData      = null;
-  let _lastSelected  = null;
-  let _clientBrand   = null;  // client brand from parameter — always gets primary colour
-  let _selectedBrand = null;  // clicked brand — opacity highlight only
-  let _chartOverrides = {};     // { metricId: chartType, ... } — persisted to settings
-  let _viewMode      = 'quarterly'; // 'quarterly' | 'monthly'
+  let _dashboard      = null;
+  let _lastData       = null;
+  let _lastSelected   = null;
+  let _clientBrand    = null;  // client brand from parameter — always gets primary colour
+  let _selectedBrand  = null;  // clicked brand — opacity highlight only
+  let _allData        = null;  // aggregated data for all periods (drives period selector)
+  let _selectedPeriod = 'all'; // 'all' or a specific period string
+  let _chartOverrides = {};    // { metricId: chartType, ... } — persisted to settings
+  let _viewMode       = 'quarterly'; // 'quarterly' | 'monthly'
   let CONFIG         = Object.assign({}, DEFAULTS);
 
   // ─── APPLY BACKGROUND ─────────────────────────────────────────────────────
@@ -972,8 +1056,10 @@
 
       applyBackground();
       overlay.remove();
-      _clientBrand   = null;
-      _selectedBrand = null;
+      _clientBrand    = null;
+      _selectedBrand  = null;
+      _allData        = null;
+      _selectedPeriod = 'all';
 
       if (_dashboard) {
         var worksheet = _dashboard.worksheets.find(function(ws) { return ws.name === CONFIG.worksheet; });
@@ -1078,6 +1164,7 @@
           CONFIG.metricId = id;
           CONFIG.chart    = resolveChart(id);
           _selectedBrand  = null;
+          _selectedPeriod = 'all';
           await fetchAndRender(worksheet, _dashboard);
         });
       }
@@ -1144,23 +1231,11 @@
       var isTrend       = INDICATOR_TREND[CONFIG.metricId];
 
       if (isTrend) {
-        // Apply quarterly or monthly aggregation
+        // Apply quarterly or monthly aggregation; keep all periods for the selector
         if (_viewMode === 'quarterly') {
           data = aggregateByQuarter(data, CONFIG.metricId);
         } else {
           data = sortByPeriod(data.filter(function(d) { return d.period; }));
-        }
-        if (!isMultiPeriod) {
-          // Snapshot-style chart (hbar, vbar-stacked etc): reduce to latest period
-          var tPeriods = [];
-          data.forEach(function(d) {
-            if (d.period && tPeriods.indexOf(d.period) === -1) tPeriods.push(d.period);
-          });
-          tPeriods.sort();
-          if (tPeriods.length > 1) {
-            var tLatest = tPeriods[tPeriods.length - 1];
-            data = data.filter(function(d) { return d.period === tLatest; });
-          }
         }
       } else {
         // Non-trend indicator: snapshot — reduce to latest yearmonth period
@@ -1176,6 +1251,10 @@
       }
 
       if (!data.length) { showEmpty(document.getElementById('chart')); return; }
+
+      // Store all aggregated periods for period selector; reset selection
+      _allData = data;
+      _selectedPeriod = 'all';
 
       // Resolve client brand (always from Select Client Brand parameter — never changes on click)
       var allParams = await dashboard.getParametersAsync();
@@ -1195,7 +1274,7 @@
       _selectedBrand = null;
 
       refreshViewToggle();
-      renderChart(data, _clientBrand, dashboard);
+      applyPeriodAndRender();
 
     } catch(err) {
       showError('Data error: ' + err.message);
