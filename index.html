@@ -52,6 +52,8 @@
       overflow: hidden;
     }
 
+    #chart svg { overflow: visible; }
+
     .error {
       color: #e994a2;
       font-size: 13px;
@@ -298,7 +300,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.10';
+  const VERSION = '2026-05-21.11';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -622,7 +624,8 @@
   let _dashboard     = null;
   let _lastData      = null;
   let _lastSelected  = null;
-  let _selectedBrand = null;
+  let _clientBrand   = null;  // client brand from parameter — always gets primary colour
+  let _selectedBrand = null;  // clicked brand — opacity highlight only
   let _chartOverrides = {};     // { metricId: chartType, ... } — persisted to settings
   let _viewMode      = 'quarterly'; // 'quarterly' | 'monthly'
   let CONFIG         = Object.assign({}, DEFAULTS);
@@ -971,6 +974,7 @@
 
       applyBackground();
       overlay.remove();
+      _clientBrand   = null;
       _selectedBrand = null;
 
       if (_dashboard) {
@@ -1164,26 +1168,25 @@
 
       if (!data.length) { showEmpty(document.getElementById('chart')); return; }
 
-      // Resolve selected brand
-      if (!_selectedBrand) {
-        var allParams = await dashboard.getParametersAsync();
-        var param = allParams.find(function(p) { return p.name === CONFIG.parameter; });
-        if (param) {
-          var raw = (param.currentValue.value || param.currentValue.formattedValue || '').trim();
-          var match = data.find(function(d) {
-            return d.name.trim().toLowerCase() === raw.toLowerCase();
-          });
-          _selectedBrand = match ? match.name : (data[0] ? data[0].name : '');
-        } else {
-          _selectedBrand = data[0] ? data[0].name : '';
-        }
-      } else if (!data.find(function(d) { return d.name === _selectedBrand; })) {
-        // Brand not in this indicator's data — fall back to first
-        _selectedBrand = data[0] ? data[0].name : null;
+      // Resolve client brand (always from Select Client Brand parameter — never changes on click)
+      var allParams = await dashboard.getParametersAsync();
+      var brandParam = allParams.find(function(p) { return p.name === CONFIG.parameter; });
+      if (brandParam) {
+        var raw = (brandParam.currentValue.value || brandParam.currentValue.formattedValue || '').trim();
+        var match = data.find(function(d) {
+          return d.name.trim().toLowerCase() === raw.toLowerCase();
+        });
+        _clientBrand = match ? match.name : (data[0] ? data[0].name : '');
+      } else {
+        _clientBrand = data[0] ? data[0].name : '';
       }
+      if (!_clientBrand || !data.find(function(d) { return d.name === _clientBrand; })) {
+        _clientBrand = data[0] ? data[0].name : null;
+      }
+      _selectedBrand = null;
 
       refreshViewToggle();
-      renderChart(data, _selectedBrand, dashboard);
+      renderChart(data, _clientBrand, dashboard);
 
     } catch(err) {
       showError('Data error: ' + err.message);
@@ -1236,25 +1239,35 @@
 
     refreshViewToggle();
 
-    if (selectedBrand) {
+    // Restore highlight after entrance animations settle
+    if (_selectedBrand) {
       var _captureEl = el;
-      setTimeout(function() { applySelectionOpacity(_captureEl, selectedBrand); }, 850);
+      setTimeout(function() { applySelectionOpacity(_captureEl, _selectedBrand); }, 850);
     }
   }
 
   // ─── MARK SELECTOR ───────────────────────────────────────────────────────
   async function selectBrand(name, dashboard) {
-    _selectedBrand = name;
-    if (_lastData) renderChart(_lastData, _selectedBrand, _dashboard);
+    // Toggle: clicking the same brand deselects
+    _selectedBrand = (_selectedBrand === name) ? null : name;
+    applySelectionOpacity(document.getElementById('chart'), _selectedBrand);
     if (!dashboard) return;
-    var criteria = [{ fieldName: CONFIG.brandField, value: name }];
-    await Promise.allSettled(
-      dashboard.worksheets
-        .filter(function(ws) { return ws.name !== CONFIG.worksheet; })
-        .map(function(ws) {
-          return ws.selectMarksByValueAsync(criteria, tableau.SelectionUpdateType.Replace);
-        })
-    );
+    if (_selectedBrand) {
+      var criteria = [{ fieldName: CONFIG.brandField, value: _selectedBrand }];
+      await Promise.allSettled(
+        dashboard.worksheets
+          .filter(function(ws) { return ws.name !== CONFIG.worksheet; })
+          .map(function(ws) {
+            return ws.selectMarksByValueAsync(criteria, tableau.SelectionUpdateType.Replace);
+          })
+      );
+    } else {
+      await Promise.allSettled(
+        dashboard.worksheets
+          .filter(function(ws) { return ws.name !== CONFIG.worksheet; })
+          .map(function(ws) { return ws.clearSelectedMarksAsync(); })
+      );
+    }
   }
 
   // ─── HELPERS ─────────────────────────────────────────────────────────────
