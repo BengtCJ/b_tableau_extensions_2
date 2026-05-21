@@ -288,8 +288,8 @@
     <div id="chart-header">
       <div id="view-toggle">
         <div class="pill-wrap">
-          <button class="pill-btn active" id="btn-qtr">Qtr</button>
-          <button class="pill-btn"        id="btn-mo">Mo</button>
+          <button class="pill-btn active" id="btn-qtr">Quarters</button>
+          <button class="pill-btn"        id="btn-mo">Months</button>
         </div>
       </div>
     </div>
@@ -299,7 +299,7 @@
 
   <script>
   // ─── VERSION ──────────────────────────────────────────────────────────────
-  const VERSION = '2026-05-21.12';
+  const VERSION = '2026-05-21.13';
 
   // ─── FONTS ────────────────────────────────────────────────────────────────
   const FONT_TITLE = "'Baskervville', 'Baskerville', Georgia, serif";
@@ -583,9 +583,8 @@
 
   function refreshViewToggle() {
     var isTrend = INDICATOR_TREND[CONFIG.metricId];
-    var isMulti = MULTI_PERIOD_CHARTS.indexOf(CONFIG.chart) !== -1;
     var header = document.getElementById('chart-header');
-    if (header) header.style.display = (isTrend && isMulti) ? 'flex' : 'none';
+    if (header) header.style.display = isTrend ? 'flex' : 'none';
 
     var qBtn = document.getElementById('btn-qtr');
     var mBtn = document.getElementById('btn-mo');
@@ -1144,16 +1143,27 @@
       var isMultiPeriod = MULTI_PERIOD_CHARTS.indexOf(CONFIG.chart) !== -1;
       var isTrend       = INDICATOR_TREND[CONFIG.metricId];
 
-      if (isMultiPeriod && isTrend) {
-        // Trend chart: aggregate or pass monthly data through
+      if (isTrend) {
+        // Apply quarterly or monthly aggregation
         if (_viewMode === 'quarterly') {
           data = aggregateByQuarter(data, CONFIG.metricId);
         } else {
-          // Monthly — drop NaN periods, sort
           data = sortByPeriod(data.filter(function(d) { return d.period; }));
         }
+        if (!isMultiPeriod) {
+          // Snapshot-style chart (hbar, vbar-stacked etc): reduce to latest period
+          var tPeriods = [];
+          data.forEach(function(d) {
+            if (d.period && tPeriods.indexOf(d.period) === -1) tPeriods.push(d.period);
+          });
+          tPeriods.sort();
+          if (tPeriods.length > 1) {
+            var tLatest = tPeriods[tPeriods.length - 1];
+            data = data.filter(function(d) { return d.period === tLatest; });
+          }
+        }
       } else {
-        // Snapshot chart: reduce to latest yearmonth period
+        // Non-trend indicator: snapshot — reduce to latest yearmonth period
         var periods = [];
         data.forEach(function(d) {
           if (d.period && periods.indexOf(d.period) === -1) periods.push(d.period);
@@ -1277,8 +1287,9 @@
 
   // ─── CHART: DONUT ─────────────────────────────────────────────────────────
   function renderDonut(el, data, selectedBrand, dashboard, D) {
-    var W = el.offsetWidth  || window.innerWidth  || 480;
-    var H = el.offsetHeight || window.innerHeight || 300;
+    var rect = el.getBoundingClientRect();
+    var W = rect.width  || window.innerWidth  || 480;
+    var H = rect.height || window.innerHeight || 300;
     var available = W - 290;
     var R = Math.min(H * 0.44, available * 0.5, 120, H < 200 ? 60 : Infinity);
     var inner = R * 0.46;
@@ -1323,6 +1334,7 @@
       .attr('fill', function(d) { return d.data.name === selectedBrand ? CONFIG.selectedColor : CONFIG.neutralColor; })
       .attr('stroke', holeColor)
       .attr('stroke-width', isTransparent ? 0 : 2)
+      .attr('data-brand', function(d) { return d.data.name; })
       .style('cursor', 'pointer')
       .on('mouseover', function() { d3.select(this).attr('d', arcHover); })
       .on('mouseout',  function() { d3.select(this).attr('d', arc); })
@@ -1339,6 +1351,7 @@
       var isSelected  = d.name === selectedBrand;
       var labelStyle  = isSelected ? D.legendSelected : D.legendLabel;
       var item = document.createElement('div');
+      item.setAttribute('data-brand', d.name);
       item.style.cssText =
         'display:flex;align-items:center;gap:7px;cursor:pointer;' +
         'font-size:11px;text-transform:uppercase;letter-spacing:0.06em;' +
